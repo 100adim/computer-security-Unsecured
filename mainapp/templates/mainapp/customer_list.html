@@ -1,0 +1,17 @@
+{% extends 'mainapp/base.html' %}
+
+{% block title %}Customer List{% endblock %}
+
+{% block content %}
+<h1>Customer List</h1>
+<table border="1" cellpadding="10" style="margin: auto;">
+    <tr><th>First Name</th><th>Last Name</th><th>ID Number</th></tr>
+    {% for customer in customers %}
+    <tr>
+        <td>{{ customer.first_name|safe }}</td>
+        <td>{{ customer.last_name }}</td>
+        <td>{{ customer.id_number }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

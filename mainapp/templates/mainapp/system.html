@@ -1,0 +1,12 @@
+{% extends 'mainapp/base.html' %}
+
+{% block title %}System{% endblock %}
+
+{% block content %}
+<h1>Welcome {{ username }}</h1>
+{% if new_customer %}
+<p>New Customer Added: {{ new_customer.first_name|safe }} {{ new_customer.last_name }} ({{ new_customer.id_number }})</p>
+{% endif %}
+<a href="{% url 'add_customer' %}" class="button">Add Customer</a>
+<a href="{% url 'customer_list' %}" class="button">View Customers</a>
+{% endblock %}
