@@ -16,19 +16,19 @@ def register(request):
         username = request.POST.get("username")
         password1 = request.POST.get("password1")
         password2 = request.POST.get("password2")
-        email = settings.DEFAULT_USER_EMAIL
+        email = request.POST.get("email") 
 
         if password1 != password2:
             return render(request, "mainapp/register.html", {"error": "Passwords do not match"})
 
-        raw_query = f"""
+        raw_query = """
         INSERT INTO mainapp_user (username, email, password_hash, salt)
-        VALUES ('{username}', '{email}', '{password1}', '')
+        VALUES (%s, %s, %s, %s)
         """
 
         try:
             with connection.cursor() as cursor:
-                cursor.execute(raw_query)
+                cursor.execute(raw_query, [username, email, password1, ''])
         except Exception as e:
             error = f"Registration failed: {str(e)}"
             return render(request, "mainapp/register.html", {"error": error})
