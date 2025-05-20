@@ -6,6 +6,8 @@ from django.shortcuts import render, redirect
 from django.db import connection
 from django.conf import settings
 from .models import User, Customer
+from django.db import IntegrityError
+
 
 def home(request):
     return render(request, "mainapp/home.html")
@@ -16,7 +18,7 @@ def register(request):
         username = request.POST.get("username")
         password1 = request.POST.get("password1")
         password2 = request.POST.get("password2")
-        email = request.POST.get("email") 
+        email = request.POST.get("email")
 
         if password1 != password2:
             return render(request, "mainapp/register.html", {"error": "Passwords do not match"})
@@ -28,7 +30,7 @@ def register(request):
 
         try:
             with connection.cursor() as cursor:
-                cursor.execute(raw_query, [username, email, password1, ''])
+                cursor.execute(raw_query, [username, email, password1, b''])
         except Exception as e:
             error = f"Registration failed: {str(e)}"
             return render(request, "mainapp/register.html", {"error": error})
@@ -49,6 +51,7 @@ def login_view(request):
             user = cursor.fetchone()
 
         if user:
+            request.session['username'] = username  
             return render(request, "mainapp/system.html", {"username": username})
         else:
             error = "Invalid username or password"
@@ -57,25 +60,37 @@ def login_view(request):
 
 def add_customer(request):
     if request.method == "POST":
+        if 'username' not in request.session:
+            return redirect('login')
+
         first_name = request.POST.get("first_name")
         last_name = request.POST.get("last_name")
         id_number = request.POST.get("id_number")
+        created_by = request.session.get("username")
 
         try:
             customer = Customer.objects.create(
                 first_name=first_name,
                 last_name=last_name,
-                id_number=id_number
+                id_number=id_number,
+                created_by=created_by
             )
+        except IntegrityError:
+            return render(request, "mainapp/add_customer.html", {
+                "error": "This ID Number already exists in the system."
+            })
         except Exception as e:
-            return render(request, "mainapp/add_customer.html", {"error": f"Failed to add customer: {str(e)}"})
+            return render(request, "mainapp/add_customer.html", {
+                "error": f"Failed to add customer: {str(e)}"
+            })
 
         return render(request, "mainapp/system.html", {"new_customer": customer})
 
     return render(request, "mainapp/add_customer.html")
 
 def customer_list(request):
-    customers = Customer.objects.all()
+    username = request.session.get("username")
+    customers = Customer.objects.filter(created_by=username)
     return render(request, "mainapp/customer_list.html", {"customers": customers})
 
 def forgot_password(request):
