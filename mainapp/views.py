@@ -7,6 +7,7 @@ from django.db import connection
 from django.conf import settings
 from .models import User, Customer
 from django.db import IntegrityError
+from django.core.mail import send_mail
 
 
 def home(request):
@@ -107,6 +108,14 @@ def forgot_password(request):
 
         request.session['reset_code'] = sha1_code
         request.session['reset_username'] = username
+
+        send_mail(
+            subject="Communication LTD - Reset Code",
+            message=f"Hello {username},\n\nHere is your reset code:\n{sha1_code}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
 
         return render(request, "mainapp/verify_reset_code.html", {"reset_code": sha1_code})
 
