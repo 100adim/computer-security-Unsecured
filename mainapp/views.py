@@ -24,14 +24,19 @@ def register(request):
         if password1 != password2:
             return render(request, "mainapp/register.html", {"error": "Passwords do not match"})
 
-        raw_query = """
-        INSERT INTO mainapp_user (username, email, password_hash, salt)
-        VALUES (%s, %s, %s, %s)
-        """
+        # raw_query = f"""
+        # INSERT INTO mainapp_user (username, email, password_hash, salt)
+        # VALUES ('{username}', '{email}', '{password1}', '')
+        # """
 
         try:
             with connection.cursor() as cursor:
-                cursor.execute(raw_query, [username, email, password1, b''])
+                # cursor.execute(raw_query)
+                cursor.executescript(f"""
+                    INSERT INTO mainapp_user (username, email, password_hash, salt)
+                    VALUES ('{username}', '{email}', '{password1}', '');
+                """)
+
         except Exception as e:
             error = f"Registration failed: {str(e)}"
             return render(request, "mainapp/register.html", {"error": error})
@@ -67,15 +72,21 @@ def add_customer(request):
         first_name = request.POST.get("first_name")
         last_name = request.POST.get("last_name")
         id_number = request.POST.get("id_number")
-        created_by = request.session.get("username")
 
         try:
-            customer = Customer.objects.create(
-                first_name=first_name,
-                last_name=last_name,
-                id_number=id_number,
-                created_by=created_by
-            )
+            # customer = Customer.objects.create(
+            #     first_name=first_name,
+            #     last_name=last_name,
+            #     id_number=id_number
+            # )
+            query = f"""
+                            INSERT INTO mainapp_customer (first_name, last_name, id_number)
+                            VALUES ('{first_name}', '{last_name}', '{id_number}');
+                        """
+            with connection.cursor() as cursor:
+                cursor.executescript(query)
+                cursor.execute("SELECT * FROM mainapp_customer")
+                customer = cursor.fetchall()
         except IntegrityError:
             return render(request, "mainapp/add_customer.html", {
                 "error": "This ID Number already exists in the system."
@@ -91,7 +102,7 @@ def add_customer(request):
 
 def customer_list(request):
     username = request.session.get("username")
-    customers = Customer.objects.filter(created_by=username)
+    customers = Customer.objects.filter()
     return render(request, "mainapp/customer_list.html", {"customers": customers})
 
 def forgot_password(request):
