@@ -3,10 +3,29 @@
 {% block title %}System{% endblock %}
 
 {% block content %}
-<h1>Welcome {{ username }}</h1>
-{% if new_customer %}
-<p>New Customer Added: {{ new_customer.first_name|safe }} {{ new_customer.last_name }} ({{ new_customer.id_number }})</p>
-{% endif %}
-<a href="{% url 'add_customer' %}" class="button">Add Customer</a>
-<a href="{% url 'customer_list' %}" class="button">View Customers</a>
+<div class="form-box">
+    <h1>Welcome to the system</h1>
+
+    {% if username %}
+        <p>Hello, {{ username|title }}!</p>
+    {% endif %}
+
+    {% if new_customer %}
+        <div class="success-message">
+
+            ✅ New customer added: {{ new_customer.first_name|safe }} {{ new_customer.last_name|safe }}
+        </div>
+    {% endif %}
+
+    <a href="{% url 'logout' %}" class="system-button" style="margin-top: 20px;">
+        🔓 Logout
+    </a>
+
+    <div style="margin-top: 40px;">
+        <a href="{% url 'add_customer' %}" class="system-button">➕ Add Customer</a>
+        <a href="{% url 'customer_list' %}" class="system-button">📋 Customer List</a>
+        <a href="{% url 'user_list' %}" class="system-button">👥 View User List</a>
+        <a href="{% url 'change_password' %}" class="system-button">🔐 Change Password</a>
+    </div>
+</div>
 {% endblock %}

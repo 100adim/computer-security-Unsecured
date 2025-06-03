@@ -3,6 +3,7 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
+<div class="form-box">
 <h1>Register</h1>
 <form method="POST">
     {% csrf_token %}
@@ -12,6 +13,7 @@
     <input type="password" name="password2" placeholder="Confirm Password" required><br>
     <button type="submit">Register</button>
 </form>
+    </div>
 {% if error %}
 <p style="color:red;">{{ error }}</p>
 {% endif %}

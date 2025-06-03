@@ -3,15 +3,30 @@
 {% block title %}Customer List{% endblock %}
 
 {% block content %}
-<h1>Customer List</h1>
-<table border="1" cellpadding="10" style="margin: auto;">
-    <tr><th>First Name</th><th>Last Name</th><th>ID Number</th></tr>
-    {% for customer in customers %}
-    <tr>
-        <td>{{ customer.first_name|safe }}</td>
-        <td>{{ customer.last_name }}</td>
-        <td>{{ customer.id_number }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<div style="text-align: center; padding: 250px;">
+    <h1> Customer List  </h1>
+
+    <table class="user-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Customer Name  </th>
+                <th>ID  </th>
+                <th>Created By </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ customer.first_name|safe  }} {{ customer.last_name|safe  }}</td>
+                <td>{{ customer.id_number|safe    }}</td>
+                <td>{{ customer.created_by  }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'home' %}" class="back-button">← Back to Home</a>
+</div>
 {% endblock %}
