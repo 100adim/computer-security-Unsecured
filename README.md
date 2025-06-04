@@ -27,7 +27,6 @@ This is the **deliberately insecure version** of the Communication LTD project, 
 - **Authentication Bypass** in login system
 - **Data Destruction** via registration form
 - **Data Manipulation** through customer management
-- **Account Takeover** in password reset
 
 ### 🚨 **XSS Vulnerabilities**
 - **Stored XSS** in customer names and data
