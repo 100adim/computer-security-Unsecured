@@ -168,7 +168,6 @@ def forgot_password(request):
 
         request.session['reset_code'] = sha1_code
         request.session['reset_username'] = username
-
         send_mail(
             subject="Communication LTD - Reset Code",
             message=f"Hello {username},\n\nHere is your reset code:\n{sha1_code}",
@@ -177,7 +176,9 @@ def forgot_password(request):
             fail_silently=False,
         )
 
-        return render(request, "mainapp/verify_reset_code.html", {"reset_code": sha1_code})
+        return redirect("verify_reset_code")
+
+        #render(request, "mainapp/verify_reset_code.html", {"reset_code": sha1_code})
 
     return render(request, "mainapp/forgot_password.html")
 
@@ -185,6 +186,7 @@ def verify_reset_code(request):
     if request.method == "POST":
         entered_code = request.POST.get("reset_code")
         saved_code = request.session.get("reset_code")
+        print(saved_code)
 
         if entered_code == saved_code:
             return redirect("reset_password")
@@ -202,8 +204,15 @@ def reset_password(request):
         if new_password1 != new_password2:
             return render(request, "mainapp/reset_password.html", {"error": "Passwords do not match."})
 
+        salt = os.urandom(16)
+        password_hash = hmac.new(salt, new_password1.encode(), hashlib.sha256).hexdigest()
+        salt_hex = salt.hex()
         try:
-            raw_query = f"UPDATE mainapp_user SET password_hash = '{new_password1}' WHERE username = '{username}'"
+            raw_query = f"""
+                            UPDATE mainapp_user
+                            SET password_hash = '{password_hash}', salt = '{salt_hex}'
+                            WHERE username = '{username}'
+                        """
             with connection.cursor() as cursor:
                 cursor.execute(raw_query)
         except Exception as e:
