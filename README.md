@@ -16,8 +16,6 @@ This is the **deliberately insecure version** of the Communication LTD project, 
 - [💉 SQL Injection Demonstrations](#-sql-injection-demonstrations)
 - [🚨 XSS Attack Demonstrations](#-xss-attack-demonstrations)
 - [📖 Detailed Setup](#-detailed-setup)
-- [🎮 Attack Guide](#-attack-guide)
-- [🧪 Testing Vulnerabilities](#-testing-vulnerabilities)
 - [📚 Vulnerability Documentation](#-vulnerability-documentation)
 - [🛠️ Technology Stack](#️-technology-stack)
 
