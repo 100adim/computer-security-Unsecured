@@ -197,6 +197,7 @@ def verify_reset_code(request):
 
 def reset_password(request):
     if request.method == "POST":
+        current_password = request.POST.get("current_password")
         new_password1 = request.POST.get("new_password1")
         new_password2 = request.POST.get("new_password2")
         username = request.session.get("reset_username")
@@ -204,23 +205,23 @@ def reset_password(request):
         if new_password1 != new_password2:
             return render(request, "mainapp/reset_password.html", {"error": "Passwords do not match."})
 
-        salt = os.urandom(16)
-        password_hash = hmac.new(salt, new_password1.encode(), hashlib.sha256).hexdigest()
-        salt_hex = salt.hex()
         try:
-            raw_query = f"""
-                            UPDATE mainapp_user
-                            SET password_hash = '{password_hash}', salt = '{salt_hex}'
-                            WHERE username = '{username}'
-                        """
-            with connection.cursor() as cursor:
-                cursor.execute(raw_query)
-        except Exception as e:
-            return render(request, "mainapp/reset_password.html", {"error": str(e)})
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return render(request, "mainapp/reset_password.html", {"error": "User not found."})
+
+        # בדיקת הסיסמה הנוכחית (לא מאובטחת - טקסט רגיל)
+        if current_password.strip() != user.password_hash.strip():
+            return render(request, "mainapp/reset_password.html", {"error": "Incorrect current password."})
+
+        # עדכון הסיסמה (ללא אבטחה)
+        user.password_hash = new_password1
+        user.save()
 
         return redirect("login")
 
     return render(request, "mainapp/reset_password.html")
+
 
 def user_list(request):
     users = User.objects.all()
